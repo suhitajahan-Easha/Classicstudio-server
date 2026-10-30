@@ -40,6 +40,14 @@ app.get('/studio',async (req,res)=>{
   res.send(result)
 
 })
+app.get('/studio/:id', async (req,res)=>{
+  const {id}=req.params
+  const result =await studiocollection.findOne(
+    {_id: new ObjectId(id)}
+  )
+  
+  res.send(result)
+})
 app.get('/add-studio/:email',async (req,res)=>{
   const {email}=req.params
   const result=await studiocollection.find({email:email}).toArray()
