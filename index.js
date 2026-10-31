@@ -73,6 +73,13 @@ app.post('/booking',async (req,res)=>{
   console.log(result)
   res.send(result)
 })
+app.get('/booking/:email',async (req,res)=>{
+  const {email}=req.params
+  const result=await bookingcollection.find({email:email}).toArray()
+  res.send(result)
+
+})
+//for listing page
 app.get('/add-studio/:email',async (req,res)=>{
   const {email}=req.params
   const result=await studiocollection.find({email:email}).toArray()
