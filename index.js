@@ -48,6 +48,15 @@ app.get('/studio/:id', async (req,res)=>{
   
   res.send(result)
 })
+app.patch('/studio/:id', async (req, res) => {
+  const data =req.body;
+  const {id}=req.params;
+  const result =await studiocollection.updateOne(
+    {_id: new ObjectId(id)},
+    {$set:data}
+  )
+  res.send(result);
+});
 app.get('/add-studio/:email',async (req,res)=>{
   const {email}=req.params
   const result=await studiocollection.find({email:email}).toArray()
