@@ -24,7 +24,7 @@ export async function connectToMongoDB() {
 const mongoclient=await connectToMongoDB()
 const db=mongoclient.db('Assignment8ph')
 const studiocollection=db.collection('Studio')
-// const bookingcollection=db.collection('bookings')
+const bookingcollection=db.collection('bookings')
 
 app.post('/add-studio', async (req,res)=>{
 
@@ -45,7 +45,8 @@ app.get('/studio/:id', async (req,res)=>{
   const result =await studiocollection.findOne(
     {_id: new ObjectId(id)}
   )
-  
+  console.log("Requested ID:", id);
+  console.log("Found studio:", result);
   res.send(result)
 })
 app.patch('/studio/:id', async (req, res) => {
@@ -56,7 +57,22 @@ app.patch('/studio/:id', async (req, res) => {
     {$set:data}
   )
   res.send(result);
+ 
 });
+ app.delete('/studio/:id', async (req, res) => {
+  const {id}=req.params;
+  const result =await studiocollection.deleteOne(
+    {_id: new ObjectId(id)}
+  )
+  res.json(result)
+});
+app.post('/booking',async (req,res)=>{
+
+  const data=req.body;
+  const result=await bookingcollection.insertOne(data)
+  console.log(result)
+  res.send(result)
+})
 app.get('/add-studio/:email',async (req,res)=>{
   const {email}=req.params
   const result=await studiocollection.find({email:email}).toArray()
