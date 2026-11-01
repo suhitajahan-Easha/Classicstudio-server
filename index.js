@@ -61,7 +61,7 @@ const verifyjwttoken= async(req,res,next)=>{
   
  
 // })
-app.post("/add-studio", upload.array("images", 5), async (req, res) => {
+app.post("/add-studio", upload.array("images", 5),verifyjwttoken, async (req, res) => {
   try {
     const imageUrls = await Promise.all(
       req.files.map((file) => uploadImage(file))
@@ -106,7 +106,7 @@ app.get('/studio/:id', async (req,res)=>{
 //   res.send(result);
  
 // });
-app.patch("/studio/:id", upload.array("images", 5), async (req, res) => {
+app.patch("/studio/:id", upload.array("images", 5),verifyjwttoken, async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
@@ -142,14 +142,14 @@ app.patch("/studio/:id", upload.array("images", 5), async (req, res) => {
     res.status(500).send({ message: "Failed to update studio" });
   }
 });
- app.delete('/studio/:id', async (req, res) => {
+ app.delete('/studio/:id',verifyjwttoken, async (req, res) => {
   const {id}=req.params;
   const result =await studiocollection.deleteOne(
     {_id: new ObjectId(id)}
   )
   res.json(result)
 });
-app.post('/booking',async (req,res)=>{
+app.post('/booking',verifyjwttoken,async (req,res)=>{
 
   const data=req.body;
   const result=await bookingcollection.insertOne(data)
@@ -168,7 +168,7 @@ app.delete('/booking/:id',async(req,res)=>{
   res.send(result)
 })
 //for listing page
-app.get('/add-studio/:email',async (req,res)=>{
+app.get('/add-studio/:email',verifyjwttoken,async (req,res)=>{
   const {email}=req.params
   const result=await studiocollection.find({email:email}).toArray()
   res.send(result)
@@ -186,3 +186,5 @@ app.get('/',(req,res)=>{
 app.listen(PORT,()=>{
     console.log(`server is running at ${PORT}`)
 })
+
+export default app 
