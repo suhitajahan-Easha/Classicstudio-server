@@ -4,6 +4,7 @@ import 'dotenv/config'
 import cors from 'cors'
 import upload from "./middleware/upload.js";
 import uploadImage from "./utils/uploadImage.js";
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 
 const app=express();
@@ -27,6 +28,29 @@ const mongoclient=await connectToMongoDB()
 const db=mongoclient.db('Assignment8ph')
 const studiocollection=db.collection('Studio')
 const bookingcollection=db.collection('bookings')
+
+const verifyjwttoken= async(req,res,next)=>{
+  const authHeader=req.headers.authorization;
+  console.log(authHeader);
+  if(!authHeader){
+    return res.status(401).send({msg:'Unauthorized!'})
+  }
+  const token=authHeader.split(" ")[1]
+  if(!token){
+   return res.status(401).send({msg:'Unauthorized!'})
+  }
+  console.log(token)
+  const JWKS =createRemoteJWKSet(new URL(`${process.env.CLIENT_URI}/api/auth/jwks`))
+ try{
+   const {payload}=await jwtVerify(token,JWKS)
+  console.log(payload)
+ }
+ catch(error)
+ {
+   return res.status(500).send({msg:'server error!'})
+ }
+  next()
+}
 
 // app.post('/add-studio', async (req,res)=>{
 
@@ -132,7 +156,7 @@ app.post('/booking',async (req,res)=>{
   console.log(result)
   res.send(result)
 })
-app.get('/booking/:email',async (req,res)=>{
+app.get('/booking/:email',verifyjwttoken,async (req,res)=>{
   const {email}=req.params
   const result=await bookingcollection.find({bookingEmail:email}).toArray()
   res.send(result)
@@ -147,6 +171,11 @@ app.delete('/booking/:id',async(req,res)=>{
 app.get('/add-studio/:email',async (req,res)=>{
   const {email}=req.params
   const result=await studiocollection.find({email:email}).toArray()
+  res.send(result)
+
+})
+app.get('/featured-Studio',async (req,res)=>{
+  const result=await studiocollection.find().limit(6).toArray()
   res.send(result)
 
 })
