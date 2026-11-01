@@ -72,15 +72,51 @@ app.get('/studio/:id', async (req,res)=>{
   console.log("Found studio:", result);
   res.send(result)
 })
-app.patch('/studio/:id', async (req, res) => {
-  const data =req.body;
-  const {id}=req.params;
-  const result =await studiocollection.updateOne(
-    {_id: new ObjectId(id)},
-    {$set:data}
-  )
-  res.send(result);
+// app.patch('/studio/:id', async (req, res) => {
+//   const data =req.body;
+//   const {id}=req.params;
+//   const result =await studiocollection.updateOne(
+//     {_id: new ObjectId(id)},
+//     {$set:data}
+//   )
+//   res.send(result);
  
+// });
+app.patch("/studio/:id", upload.array("images", 5), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+
+    let imageUrls;
+
+    if (req.files && req.files.length > 0) {
+      imageUrls = await Promise.all(
+        req.files.map((file) => uploadImage(file))
+      );
+    } else {
+      const oldStudio = await studiocollection.findOne({
+        _id: new ObjectId(id),
+      });
+
+      imageUrls = oldStudio.images || [];
+    }
+
+    const updatedData = {
+      ...data,
+      amenities: JSON.parse(data.amenities || "[]"),
+      images: imageUrls,
+    };
+
+    const result = await studiocollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updatedData }
+    );
+
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Failed to update studio" });
+  }
 });
  app.delete('/studio/:id', async (req, res) => {
   const {id}=req.params;
