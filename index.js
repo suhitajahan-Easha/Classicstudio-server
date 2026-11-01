@@ -2,6 +2,8 @@ import express from 'express'
 import { MongoClient, ObjectId } from 'mongodb';
 import 'dotenv/config'
 import cors from 'cors'
+import upload from "./middleware/upload.js";
+import uploadImage from "./utils/uploadImage.js";
 
 
 const app=express();
@@ -26,15 +28,36 @@ const db=mongoclient.db('Assignment8ph')
 const studiocollection=db.collection('Studio')
 const bookingcollection=db.collection('bookings')
 
-app.post('/add-studio', async (req,res)=>{
+// app.post('/add-studio', async (req,res)=>{
 
-  const data=req.body;
-  const result=await studiocollection.insertOne(data)
-  console.log(result)
-  res.send(result)
+//   const data=req.body;
+//   const result=await studiocollection.insertOne(data)
+//   console.log(result)
+//   res.send(result)
   
  
-})
+// })
+app.post("/add-studio", upload.array("images", 5), async (req, res) => {
+  try {
+    const imageUrls = await Promise.all(
+      req.files.map((file) => uploadImage(file))
+    );
+
+    const data = {
+      ...req.body,
+      amenities: JSON.parse(req.body.amenities || "[]"),
+      images: imageUrls,
+    };
+
+    const result = await studiocollection.insertOne(data);
+
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Failed to add studio" });
+  }
+});
+
 app.get('/studio',async (req,res)=>{
   const result=await studiocollection.find().toArray()
   res.send(result)
@@ -75,9 +98,14 @@ app.post('/booking',async (req,res)=>{
 })
 app.get('/booking/:email',async (req,res)=>{
   const {email}=req.params
-  const result=await bookingcollection.find({email:email}).toArray()
+  const result=await bookingcollection.find({bookingEmail:email}).toArray()
   res.send(result)
 
+})
+app.delete('/booking/:id',async(req,res)=>{
+  const {id}=req.params
+  const result=await bookingcollection.deleteOne({_id:id})
+  res.send(result)
 })
 //for listing page
 app.get('/add-studio/:email',async (req,res)=>{
