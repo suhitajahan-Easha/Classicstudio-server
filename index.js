@@ -71,6 +71,7 @@ app.post("/add-studio", upload.array("images", 5),verifyjwttoken, async (req, re
       ...req.body,
       amenities: JSON.parse(req.body.amenities || "[]"),
       images: imageUrls,
+      rating: Number((Math.random() * 1.5 + 3.5).toFixed(1))
     };
 //     const data = {
 //   ...req.body,
