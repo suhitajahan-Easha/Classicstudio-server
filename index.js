@@ -73,12 +73,7 @@ app.post("/add-studio", upload.array("images", 5),verifyjwttoken, async (req, re
       images: imageUrls,
       rating: Number((Math.random() * 1.5 + 3.5).toFixed(1))
     };
-//     const data = {
-//   ...req.body,
-//   amenities: JSON.parse(req.body.amenities || "[]"),
-//   images: imageUrls,
-//   rating: Number((Math.random() * 1.5 + 3.5).toFixed(1)),
-// };
+
 
     const result = await studiocollection.insertOne(data);
 
@@ -211,11 +206,11 @@ app.patch("/booking/:id", verifyjwttoken, async (req, res) => {
   res.send({ message: "Booking cancelled successfully." });
 });
 
-app.delete('/booking/:id',async(req,res)=>{
-  const {id}=req.params
-  const result=await bookingcollection.deleteOne({_id:id})
-  res.send(result)
-})
+// app.delete('/booking/:id',async(req,res)=>{
+//   const {id}=req.params
+//   const result=await bookingcollection.deleteOne({_id:id})
+//   res.send(result)
+// })
 //for listing page
 app.get('/add-studio/:email',verifyjwttoken,async (req,res)=>{
   const {email}=req.params
