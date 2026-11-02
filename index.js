@@ -72,6 +72,12 @@ app.post("/add-studio", upload.array("images", 5),verifyjwttoken, async (req, re
       amenities: JSON.parse(req.body.amenities || "[]"),
       images: imageUrls,
     };
+//     const data = {
+//   ...req.body,
+//   amenities: JSON.parse(req.body.amenities || "[]"),
+//   images: imageUrls,
+//   rating: Number((Math.random() * 1.5 + 3.5).toFixed(1)),
+// };
 
     const result = await studiocollection.insertOne(data);
 
@@ -150,11 +156,36 @@ app.patch("/studio/:id", upload.array("images", 5),verifyjwttoken, async (req, r
   res.json(result)
 });
 app.post('/booking',verifyjwttoken,async (req,res)=>{
+  try{
+     const {studioId,bookingDate,startTime,endTime,} = req.body;
+     if (!startTime || !endTime || startTime >= endTime) {
+      return res.status(400).send({
+        message: "Please select a valid booking time.",
+      });
+    }
+     const existingBooking = await bookingcollection.findOne({studioId,bookingDate,
+      status: "Confirmed",
+      startTime: { $lt: endTime },
+      endTime: { $gt: startTime },
+    });
 
-  const data=req.body;
+    if (existingBooking) {
+      return res.status(409).send({
+        message: "This time slot is already booked. Please choose another time.",
+      });
+    }
+
+
+  
+  const data={...req.body,status:"Pending",};
   const result=await bookingcollection.insertOne(data)
-  console.log(result)
   res.send(result)
+
+}
+  catch(error){
+     console.log(error);
+     res.status(500).send({ message: "Booking failed" });
+  }
 })
 app.get('/booking/:email',verifyjwttoken,async (req,res)=>{
   const {email}=req.params
@@ -162,6 +193,23 @@ app.get('/booking/:email',verifyjwttoken,async (req,res)=>{
   res.send(result)
 
 })
+app.patch("/booking/:id", verifyjwttoken, async (req, res) => {
+  const { id } = req.params;
+
+  const result = await bookingcollection.updateOne(
+    { _id:new ObjectId(id), status: "Pending" },
+    { $set: { status: "Cancelled" } }
+  );
+
+  if (result.modifiedCount === 0) {
+    return res.status(400).send({
+      message: "Booking could not be cancelled.",
+    });
+  }
+
+  res.send({ message: "Booking cancelled successfully." });
+});
+
 app.delete('/booking/:id',async(req,res)=>{
   const {id}=req.params
   const result=await bookingcollection.deleteOne({_id:id})
@@ -175,7 +223,7 @@ app.get('/add-studio/:email',verifyjwttoken,async (req,res)=>{
 
 })
 app.get('/featured-Studio',async (req,res)=>{
-  const result=await studiocollection.find().limit(6).toArray()
+  const result=await studiocollection.find().sort({ _id: -1 }).limit(6).toArray()
   res.send(result)
 
 })
